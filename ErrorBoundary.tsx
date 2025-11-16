@@ -9,9 +9,19 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  state: State = {
-    hasError: false
-  };
+  public state: State;
+
+  // Fix: Use a constructor for state initialization and method binding.
+  // This classic React pattern is more robust against certain tooling or
+  // TypeScript configuration issues that can cause problems with 'this' context
+  // when using modern class field syntax.
+  constructor(props: Props) {
+    super(props);
+    this.state = {
+      hasError: false,
+    };
+    this.handleRecover = this.handleRecover.bind(this);
+  }
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
@@ -22,8 +32,8 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  // Use a class property arrow function to ensure `this` is correctly bound.
-  handleRecover = () => {
+  // This is now a regular method bound in the constructor.
+  handleRecover() {
     this.setState({ hasError: false });
   }
 

@@ -103,7 +103,7 @@ const App: React.FC = () => {
   const [userInstruction, setUserInstruction] = useState<string | null>(null);
   const taskTimeoutRef = useRef<number | null>(null);
   
-  const apiKeyExists = !!process.env.API_KEY;
+  const apiKeyExists = typeof process !== 'undefined' && process.env && !!process.env.API_KEY;
 
   const addMessage = useCallback((message: string) => {
     setStatusMessages(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 199)]);

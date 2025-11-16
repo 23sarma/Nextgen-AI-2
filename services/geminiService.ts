@@ -1,9 +1,9 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AIModule, GroundingSource } from '../types';
 
-const API_KEY = process.env.API_KEY;
+const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
 
-const ai = new GoogleGenAI({ apiKey: API_KEY! });
+const ai = new GoogleGenAI({ apiKey: API_KEY || '' });
 
 const model = 'gemini-2.5-pro';
 
