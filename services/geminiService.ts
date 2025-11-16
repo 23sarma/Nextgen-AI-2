@@ -1,7 +1,8 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import type { AIModule, GroundingSource } from '../types';
 
-const API_KEY = (typeof process !== 'undefined' && process.env) ? process.env.API_KEY : undefined;
+// Fix: Adhering to guidelines to use process.env.API_KEY. This resolves the TypeScript error for `import.meta.env`.
+const API_KEY = process.env.API_KEY;
 
 const ai = new GoogleGenAI({ apiKey: API_KEY || '' });
 

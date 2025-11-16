@@ -63,26 +63,13 @@ const injectCSS = (css: string) => {
 };
 
 
+// Fix: Updated component to show a generic error message, complying with API key handling guidelines.
 const ApiKeySetupGuide = () => (
   <div className="min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center p-4">
     <div className="max-w-2xl w-full bg-black/30 backdrop-blur-sm border border-red-500/50 rounded-lg p-8 shadow-lg shadow-red-500/10">
-      <h1 className="text-2xl font-bold text-red-400 mb-4">Configuration Required</h1>
-      <p className="text-gray-300 mb-6">
-        The Gemini API key is missing. To run this application, you need to set it up as an environment variable in your Vercel project.
-      </p>
-      <h2 className="text-lg font-semibold text-white mb-2">Instructions for Vercel Deployment:</h2>
-      <ol className="list-decimal list-inside space-y-2 text-gray-400">
-        <li>Go to your project's dashboard on Vercel.</li>
-        <li>Navigate to the <code className="bg-gray-700 p-1 rounded-md text-cyan-400">Settings</code> tab.</li>
-        <li>Click on <code className="bg-gray-700 p-1 rounded-md text-cyan-400">Environment Variables</code>.</li>
-        <li>Create a new variable with the following details:</li>
-      </ol>
-      <div className="mt-4 p-4 bg-gray-800 rounded-lg font-mono text-sm">
-        <p><span className="font-bold text-white">NAME:</span> <code className="text-yellow-300">API_KEY</code></p>
-        <p><span className="font-bold text-white">VALUE:</span> <code className="text-yellow-300">[Your Google Gemini API Key]</code></p>
-      </div>
-       <p className="text-xs text-gray-500 mt-6">
-        Once saved, redeploy your project for the changes to take effect. The application will not run until the API key is correctly configured.
+      <h1 className="text-2xl font-bold text-red-400 mb-4">Configuration Error</h1>
+      <p className="text-gray-300">
+        The API_KEY environment variable is not set. The application cannot function without it.
       </p>
     </div>
   </div>
@@ -103,7 +90,8 @@ const App: React.FC = () => {
   const [userInstruction, setUserInstruction] = useState<string | null>(null);
   const taskTimeoutRef = useRef<number | null>(null);
   
-  const apiKeyExists = typeof process !== 'undefined' && process.env && !!process.env.API_KEY;
+  // Fix: Adhering to guidelines to use process.env.API_KEY. This resolves the TypeScript error for `import.meta.env`.
+  const apiKeyExists = !!process.env.API_KEY;
 
   const addMessage = useCallback((message: string) => {
     setStatusMessages(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 199)]);
