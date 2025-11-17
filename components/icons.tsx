@@ -13,6 +13,31 @@ const Icon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
+export const OpenAiIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props} strokeWidth={1} >
+        <path d="M18.396 6.115a8.995 8.995 0 01-12.792 0M5.604 17.885a8.995 8.995 0 0112.792 0M12 2.5a9.5 9.5 0 100 19 9.5 9.5 0 000-19zM12 5.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/>
+    </Icon>
+);
+
+export const AnthropicIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props} fill="currentColor">
+        <path d="M12.721.846a1.29 1.29 0 00-1.442 0L.987 9.121a1.29 1.29 0 00.721 2.373h4.088v8.66a1.29 1.29 0 001.29 1.29h9.826a1.29 1.29 0 001.29-1.29v-8.66h4.088a1.29 1.29 0 00.72-2.373L12.721.846zm-2.83 18.068V12.78h4.218v6.134H9.89z" />
+    </Icon>
+);
+
+export const KeyIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props} >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 013 3m3 0a6 6 0 01-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 1121.75 8.25z" />
+    </Icon>
+);
+
+export const CheckCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props} >
+        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </Icon>
+);
+
+
 export const UserCircleIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <Icon {...props}><path strokeLinecap="round" strokeLinejoin="round" d="M17.982 18.725A7.488 7.488 0 0012 15.75a7.488 7.488 0 00-5.982 2.975m11.963 0a9 9 0 10-11.963 0m11.963 0A8.966 8.966 0 0112 21a8.966 8.966 0 01-5.982-2.275M15 9.75a3 3 0 11-6 0 3 3 0 016 0z" /></Icon>
 );
@@ -48,6 +73,13 @@ export const ShieldCheckIcon = (props: React.SVGProps<SVGSVGElement>) => (
   <Icon {...props}>
     <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
   </Icon>
+);
+
+// Fix: Added missing ShieldExclamationIcon component.
+export const ShieldExclamationIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m0-10.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.75c0 5.592 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.57-.598-3.75h-.152c-3.196 0-6.1-1.249-8.25-3.286zm0 13.036h.008v.008H12v-.008z" />
+    </Icon>
 );
 
 export const WrenchScrewdriverIcon = (props: React.SVGProps<SVGSVGElement>) => (

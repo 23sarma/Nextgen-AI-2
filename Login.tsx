@@ -5,9 +5,6 @@ interface LoginProps {
   onLoginSuccess: () => void;
 }
 
-const CORRECT_EMAIL = 'lobish12sarma@gmail.com';
-const CORRECT_PASSWORD = 'Lobish23';
-
 const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,12 +18,12 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
 
     // Simulate network delay
     setTimeout(() => {
-      if (email === CORRECT_EMAIL && password === CORRECT_PASSWORD) {
+      if (email.trim() && password.trim()) {
         onLoginSuccess();
       } else {
-        setError('Invalid email or password.');
+        setError('Email and password cannot be empty.');
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }, 1000);
   };
 
@@ -49,7 +46,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="Email address"
+              placeholder="Enter any email"
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />
@@ -63,7 +60,7 @@ const Login: React.FC<LoginProps> = ({ onLoginSuccess }) => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
+              placeholder="Enter any password"
               className="w-full px-3 py-2 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
               required
             />

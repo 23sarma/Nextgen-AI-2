@@ -3,10 +3,11 @@ import { Header } from './components/Header';
 import { ModuleGrid } from './components/ModuleGrid';
 import { StatusLog } from './components/StatusLog';
 import { InteractivePane } from './components/InteractivePane';
-import Login from './Login';
 import Chat from './Chat';
-import type { AIModule, GroundingSource } from './types';
-import { generateCode, generateTextResponse, generateNextGoal, generateThemeCSS, generateNewModule, performWebSearch, handleChatQuery } from './services/geminiService';
+import Login from './Login';
+import ApiKeyManager from './components/ApiKeyManager';
+import type { AIModule, GroundingSource, AIProvider } from './types';
+import { getAiService, getAvailableProviders, ProviderDetails } from './services/aiProvider';
 import {
   CodeBracketSquareIcon, CircleStackIcon, ShieldCheckIcon,
   WrenchScrewdriverIcon, SparklesIcon, CpuChipIcon, CubeTransparentIcon,
@@ -32,7 +33,7 @@ const INITIAL_MODULES: AIModule[] = [
   { id: 'core_protection_shield', name: 'Hyper-Protection Shield', category: 'Core Systems', description: 'Internal firewall and self-defense system.', status: 'active', icon: <ShieldCheckIcon />, taskType: 'self_reflection' },
   { id: 'system_rearchitect', name: 'UI Re-architecting', category: 'Core Systems', description: 'Dynamically re-engineers its own visual interface.', status: 'active', icon: <PaintBrushIcon />, taskType: 'system_rebuild' },
   { id: 'genesis_engine', name: 'Genesis Engine', category: 'Core Systems', description: 'Creates entirely new tools and modules for itself.', status: 'active', icon: <PlusCircleIcon />, taskType: 'create_module' },
-  { id: 'web_consciousness', name: 'Web Consciousness', category: 'Core Systems', description: 'Accesses the live internet via Google Search to learn.', status: 'active', icon: <GlobeAltIcon />, taskType: 'web_search' },
+  { id: 'web_consciousness', name: 'Web Consciousness', category: 'Core Systems', description: 'Accesses the live internet to learn (Google Provider only).', status: 'active', icon: <GlobeAltIcon />, taskType: 'web_search' },
   { id: 'deployment_manifold', name: 'Deployment Manifold', category: 'Core Systems', description: 'Launches created tools to the internet via a public link.', status: 'active', icon: <RocketLaunchIcon />, taskType: 'deploy' },
 
 
@@ -62,20 +63,6 @@ const injectCSS = (css: string) => {
   styleElement.innerHTML = css;
 };
 
-
-// Fix: Updated component to show a generic error message, complying with API key handling guidelines.
-const ApiKeySetupGuide = () => (
-  <div className="min-h-screen bg-gray-900 text-gray-200 flex items-center justify-center p-4">
-    <div className="max-w-2xl w-full bg-black/30 backdrop-blur-sm border border-red-500/50 rounded-lg p-8 shadow-lg shadow-red-500/10">
-      <h1 className="text-2xl font-bold text-red-400 mb-4">Configuration Error</h1>
-      <p className="text-gray-300">
-        The API_KEY environment variable is not set. The application cannot function without it.
-      </p>
-    </div>
-  </div>
-);
-
-
 const App: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [modules, setModules] = useState<AIModule[]>(INITIAL_MODULES);
@@ -89,15 +76,43 @@ const App: React.FC = () => {
   const [lastGeneratedCode, setLastGeneratedCode] = useState('');
   const [userInstruction, setUserInstruction] = useState<string | null>(null);
   const taskTimeoutRef = useRef<number | null>(null);
+
+  const [availableProviders, setAvailableProviders] = useState<ProviderDetails[]>([]);
+  const [provider, setProvider] = useState<AIProvider | null>(null);
   
-  // Fix: Adhering to guidelines to use process.env.API_KEY. This resolves the TypeScript error for `import.meta.env`.
-  const apiKeyExists = !!process.env.API_KEY;
+  const checkProviders = useCallback(() => {
+    const providers = getAvailableProviders();
+    const configuredProviders = providers.filter(p => p.isConfigured);
+    setAvailableProviders(providers);
+    
+    if (configuredProviders.length > 0) {
+      // If the current provider is no longer configured, switch to the first available one
+      if (!provider || !configuredProviders.some(p => p.id === provider)) {
+        setProvider(configuredProviders[0].id);
+      }
+    } else {
+      setProvider(null);
+    }
+    return configuredProviders.length > 0;
+  }, [provider]);
+
+  useEffect(() => {
+    if(isAuthenticated) {
+      checkProviders();
+    }
+  }, [isAuthenticated, checkProviders]);
 
   const addMessage = useCallback((message: string) => {
     setStatusMessages(prev => [`[${new Date().toLocaleTimeString()}] ${message}`, ...prev.slice(0, 199)]);
   }, []);
 
   const runAutonomousCycle = useCallback(async (instruction: string | null = null) => {
+    if (!provider) {
+        addMessage("[System Error] No AI provider configured or selected. Autonomous cycle halted.");
+        setIsLoading(false);
+        return;
+    }
+
     setIsLoading(true);
     setGroundingSources([]);
     
@@ -106,11 +121,12 @@ const App: React.FC = () => {
       : `[System] Current task complete. Deciding on next autonomous goal.`
     );
 
+    const aiService = getAiService(provider);
+
     try {
-      // Pass the user instruction to the goal generation logic
-      const { goal, targetModuleId } = await generateNextGoal(modules, previousGoal, !!lastGeneratedCode, instruction);
+      const { goal, targetModuleId } = await aiService.generateNextGoal(modules, previousGoal, !!lastGeneratedCode, instruction);
       setPreviousGoal(goal);
-      setUserInstruction(null); // Clear instruction after it's been used
+      setUserInstruction(null);
 
       const module = modules.find(m => m.id === targetModuleId);
       if (!module) throw new Error(`AI decided on an invalid module ID: ${targetModuleId}`);
@@ -123,7 +139,7 @@ const App: React.FC = () => {
       let result = '';
       switch(module.taskType) {
         case 'code':
-          result = await generateCode(goal);
+          result = await aiService.generateCode(goal);
           setLastGeneratedCode(result);
           addMessage(`[${module.name}] Component generation successful.`);
           break;
@@ -138,25 +154,25 @@ const App: React.FC = () => {
           }
           break;
         case 'system_rebuild':
-          const css = await generateThemeCSS(goal);
+          const css = await aiService.generateThemeCSS(goal);
           injectCSS(css);
           result = css;
           addMessage(`[${module.name}] UI re-architecting complete. Theme updated.`);
           break;
         case 'create_module':
-          const newModule = await generateNewModule(goal, modules);
+          const newModule = await aiService.generateNewModule(goal, modules);
           setModules(prev => [...prev, { ...newModule, icon: <SparklesIcon /> }]);
           result = `New Module Created:\nName: ${newModule.name}\nCategory: ${newModule.category}\nDescription: ${newModule.description}`;
           addMessage(`[Genesis Engine] Successfully created a new module: ${newModule.name}.`);
           break;
         case 'web_search':
-          const searchResult = await performWebSearch(goal);
+          const searchResult = await aiService.performWebSearch(goal);
           result = searchResult.text;
           setGroundingSources(searchResult.sources);
           addMessage(`[Web Consciousness] Research complete. Found ${searchResult.sources.length} sources.`);
           break;
         default:
-          result = await generateTextResponse(module, goal);
+          result = await aiService.generateTextResponse(module, goal);
           addMessage(`[${module.name}] Task successful.`);
           break;
       }
@@ -168,52 +184,76 @@ const App: React.FC = () => {
       setGeneratedContent(`<div style="color:red;padding:1rem;font-family:sans-serif;"><h4>Autonomous Cycle Error</h4><p>${errorMessage}</p></div>`);
       setSelectedModuleId('core_self_fixing');
       setCurrentPrompt('Analyze and report on the recent system error.');
-      const report = await generateTextResponse(modules.find(m => m.id === 'core_self_fixing')!, `A critical error occurred: ${errorMessage}. What is my self-repair protocol?`);
+      const selfFixingModule = modules.find(m => m.id === 'core_self_fixing')!;
+      const report = await aiService.generateTextResponse(selfFixingModule, `A critical error occurred: ${errorMessage}. What is my self-repair protocol?`);
       setGeneratedContent(report);
       addMessage(`[Self-Fixing Engine] Error analysis complete. System stabilized.`);
     } finally {
       setIsLoading(false);
-      const delay = userInstruction ? 1000 : 12000;
+      const delay = 65000; // Increased delay to prevent rate limiting
       addMessage(`[System] Entering idle state. Next cycle begins in ${delay/1000} seconds.`);
       if (taskTimeoutRef.current) clearTimeout(taskTimeoutRef.current);
       taskTimeoutRef.current = setTimeout(() => runAutonomousCycle(null), delay);
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [modules, previousGoal, lastGeneratedCode]);
+  }, [provider, modules, previousGoal, lastGeneratedCode, addMessage]);
+
+  const startCycleIfReady = useCallback(() => {
+    if (provider && isAuthenticated) {
+        if (taskTimeoutRef.current) clearTimeout(taskTimeoutRef.current);
+        taskTimeoutRef.current = setTimeout(() => runAutonomousCycle(null), 1000);
+    }
+  }, [provider, isAuthenticated, runAutonomousCycle]);
 
   useEffect(() => {
-    if (isAuthenticated && apiKeyExists) {
-      taskTimeoutRef.current = setTimeout(() => runAutonomousCycle(null), 1000);
-    }
+    startCycleIfReady();
     return () => {
       if (taskTimeoutRef.current) {
         clearTimeout(taskTimeoutRef.current);
       }
     };
-  }, [isAuthenticated, apiKeyExists, runAutonomousCycle]);
+  }, [startCycleIfReady]);
+
   
   const handleSendMessage = async (message: string): Promise<string> => {
-    setUserInstruction(message); // Set instruction to influence next autonomous goal
+    if (!provider) return "Cannot send message. No AI provider is active.";
+    setUserInstruction(message); 
     
-    // Also get a direct chat response
+    const aiService = getAiService(provider);
     const aiContext = `My current goal is "${currentPrompt}". My last significant action was: ${statusMessages[0] || 'none'}.`;
-    const chatResponse = await handleChatQuery(message, aiContext);
+    const chatResponse = await aiService.handleChatQuery(message, aiContext);
 
     if (taskTimeoutRef.current) {
       clearTimeout(taskTimeoutRef.current);
     }
-    runAutonomousCycle(message); // Immediately trigger a new cycle with the user's instruction
+    runAutonomousCycle(message);
     return chatResponse;
   };
 
-  if (!apiKeyExists) {
-    return <ApiKeySetupGuide />;
-  }
+  const handleProviderSelect = (selectedProvider: AIProvider) => {
+    setProvider(selectedProvider);
+    addMessage(`[System] Switched to ${selectedProvider} provider. Restarting autonomous cycle.`);
+    if (taskTimeoutRef.current) clearTimeout(taskTimeoutRef.current);
+    taskTimeoutRef.current = setTimeout(() => runAutonomousCycle(null), 1000);
+  };
+  
+  const handleKeysSaved = () => {
+    addMessage("[System] API keys saved. Re-initializing providers...");
+    checkProviders();
+  };
+
+  const handleLoginSuccess = () => {
+    setIsAuthenticated(true);
+  };
 
   if (!isAuthenticated) {
-    return <Login onLoginSuccess={() => setIsAuthenticated(true)} />;
+    return <Login onLoginSuccess={handleLoginSuccess} />;
   }
   
+  if (!provider) {
+    return <ApiKeyManager onKeysSaved={handleKeysSaved} />;
+  }
+  
+  const configuredProviders = availableProviders.filter(p => p.isConfigured);
   const selectedModule = modules.find(m => m.id === selectedModuleId);
 
   return (
@@ -222,7 +262,12 @@ const App: React.FC = () => {
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(20,184,166,0.15),transparent)]"></div>
       
       <div className="relative z-10 flex flex-col flex-grow min-h-0">
-        <Header isLoading={isLoading} />
+        <Header 
+          isLoading={isLoading} 
+          availableProviders={configuredProviders}
+          currentProvider={provider}
+          onProviderChange={handleProviderSelect}
+        />
         <main className="flex-grow flex flex-col lg:flex-row gap-8 mt-8 min-h-0">
           <div className="flex-grow w-full lg:w-3/5 xl:w-2/3">
             <ModuleGrid 
