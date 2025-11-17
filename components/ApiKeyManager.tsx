@@ -11,12 +11,14 @@ const ApiKeyManager: React.FC<ApiKeyManagerProps> = ({ onKeysSaved }) => {
     const [keys, setKeys] = useState<{ [key: string]: string }>({
         google: '',
         openai: '',
-        anthropic: ''
+        anthropic: '',
+        deepseek: ''
     });
     const [savedStatus, setSavedStatus] = useState<{ [key: string]: boolean }>({
        google: initialProviders.find(p=>p.id === 'google')?.isConfigured || false,
        openai: initialProviders.find(p=>p.id === 'openai')?.isConfigured || false,
        anthropic: initialProviders.find(p=>p.id === 'anthropic')?.isConfigured || false,
+       deepseek: initialProviders.find(p=>p.id === 'deepseek')?.isConfigured || false,
     });
 
     const handleInputChange = (provider: string, value: string) => {

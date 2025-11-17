@@ -13,6 +13,13 @@ const Icon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
+export const DeepseekIcon = (props: React.SVGProps<SVGSVGElement>) => (
+    <Icon {...props} viewBox="0 0 24 24" >
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.5 21l5.25-11.25L21 21m-9-3h7.5M3 5.621a48.474 48.474 0 016-.371m0 0c1.12 0 2.233.038 3.334.114M9 5.25V3m3.334 2.364C11.176 10.658 7.69 15.08 3 17.502m9.334-12.138c.896.061 1.785.147 2.666.257m-4.589 8.495a18.023 18.023 0 01-3.827-5.802" />
+    </Icon>
+);
+
+
 export const OpenAiIcon = (props: React.SVGProps<SVGSVGElement>) => (
     <Icon {...props} strokeWidth={1} >
         <path d="M18.396 6.115a8.995 8.995 0 01-12.792 0M5.604 17.885a8.995 8.995 0 0112.792 0M12 2.5a9.5 9.5 0 100 19 9.5 9.5 0 000-19zM12 5.5a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM12 8.5a3.5 3.5 0 100 7 3.5 3.5 0 000-7z"/>

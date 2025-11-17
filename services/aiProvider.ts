@@ -4,7 +4,8 @@ import type { AIService } from "./aiService";
 import geminiService from "./geminiService";
 import openAIService from "./openAIService";
 import anthropicService from "./anthropicService";
-import { CpuChipIcon, OpenAiIcon, AnthropicIcon } from "../components/icons";
+import deepseekService from "./deepseekService";
+import { CpuChipIcon, OpenAiIcon, AnthropicIcon, DeepseekIcon } from "../components/icons";
 
 export interface ProviderDetails {
     id: AIProvider;
@@ -18,6 +19,7 @@ const PROVIDERS: Omit<ProviderDetails, 'isConfigured'>[] = [
     { id: 'google', name: 'Google Gemini', apiKeyName: 'API_KEY_GOOGLE', icon: CpuChipIcon },
     { id: 'openai', name: 'OpenAI GPT', apiKeyName: 'API_KEY_OPENAI', icon: OpenAiIcon },
     { id: 'anthropic', name: 'Anthropic Claude', apiKeyName: 'API_KEY_ANTHROPIC', icon: AnthropicIcon },
+    { id: 'deepseek', name: 'Deepseek AI', apiKeyName: 'API_KEY_DEEPSEEK', icon: DeepseekIcon },
 ];
 
 export function getApiKey(provider: AIProvider): string | null {
@@ -52,6 +54,8 @@ export function getAiService(provider: AIProvider): AIService {
             return openAIService;
         case 'anthropic':
             return anthropicService;
+        case 'deepseek':
+            return deepseekService;
         default:
             console.warn(`Unknown or unconfigured AI provider: ${provider}. Defaulting to Google Gemini Service.`);
             return geminiService;

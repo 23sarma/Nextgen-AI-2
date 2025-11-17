@@ -9,10 +9,10 @@ interface State {
 }
 
 class ErrorBoundary extends Component<Props, State> {
-  // Fix: Reverted to a constructor for state initialization and method binding.
-  // The original class field syntax, while modern, was causing type errors,
-  // likely due to an environment-specific issue. The constructor-based
-  // approach is more robustly supported and resolves the errors.
+  // Fix: Switched to using a constructor for state initialization and method binding.
+  // This classic React pattern ensures broader compatibility and resolves issues where
+  // properties from the base Component class (like `setState` and `props`) were not
+  // being correctly recognized on the component's type.
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };
@@ -28,7 +28,6 @@ class ErrorBoundary extends Component<Props, State> {
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  // Fix: Converted back to a standard class method, bound in the constructor.
   handleRecover(): void {
     this.setState({ hasError: false });
   }
